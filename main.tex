@@ -16,6 +16,8 @@
 \usepackage{tabularx}
 \usepackage{xcolor}
 \usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.multipart}
 
 \frenchspacing % No double spacing between sentences
 \linespread{1.2} % Set linespace
@@ -42,6 +44,53 @@ pdfauthor = {Group 1}
 
 \newcommand{\projecttitle}[1]{\subsection*{#1}}
 \newcommand{\proposalbox}[1]{\vspace{0.3cm}\noindent\textbf{#1}\par\vspace{0.1cm}}
+
+%-----------------------
+% TikZ diagram styles
+%-----------------------
+\tikzset{
+    nodebox/.style={
+        draw,
+        rounded corners,
+        align=left,
+        font=\small,
+        inner sep=6pt,
+        minimum width=3.4cm,
+        fill=gray!6
+    },
+    gatewaybox/.style={
+        draw,
+        rounded corners,
+        align=left,
+        font=\small,
+        inner sep=6pt,
+        minimum width=3.7cm,
+        fill=blue!6
+    },
+    functionbox/.style={
+        draw,
+        rounded corners,
+        align=left,
+        font=\small,
+        inner sep=6pt,
+        fill=green!6
+    },
+    packet/.style={
+        -{Latex[length=2.2mm]},
+        thick
+    },
+    downlink/.style={
+        -{Latex[length=2.2mm]},
+        thick,
+        dashed
+    },
+    wireless/.style={
+        -{Latex[length=2.2mm]},
+        thick,
+        dotted
+    }
+}
+
 
 %-----------------------
 % Begin document
@@ -157,6 +206,93 @@ coaster:2:184:237:82:0:large:low
 \end{verbatim}
 
 This means that node 2 sent packet 184, measured 237 g, measured 8.2 degrees Celsius, the button was not pressed, the detected glass type is large, and the drink level is low.
+
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[node distance=1.2cm and 1.8cm]
+        \node[nodebox] (c1) {
+            \textbf{Smart Coaster Node 1}\\
+            Components:\\
+            -- IBR-Node / RIOT OS\\
+            -- Load cell + HX711\\
+            -- Temperature sensor\\
+            -- Waiter-call button\\
+            -- Status LED\\[1mm]
+            Local functions:\\
+            -- sample sensors\\
+            -- classify fill level\\
+            -- detect button events
+        };
+
+        \node[nodebox, below=of c1] (c2) {
+            \textbf{Smart Coaster Node 2}\\
+            Components:\\
+            -- IBR-Node / RIOT OS\\
+            -- Load cell + HX711\\
+            -- Temperature sensor\\
+            -- Button + LED\\[1mm]
+            Local functions:\\
+            -- glass type detection\\
+            -- low-drink alert\\
+            -- adaptive send interval
+        };
+
+        \node[nodebox, below=of c2] (relay) {
+            \textbf{Optional Relay Node}\\
+            Components:\\
+            -- IBR-Node\\
+            -- RIOT + RPL\\[1mm]
+            Function:\\
+            -- forward packets\\
+            -- extend range\\
+            -- enable multi-hop tests
+        };
+
+        \node[gatewaybox, right=4.5cm of c2] (gw) {
+            \textbf{Gateway / Service Station}\\
+            Components:\\
+            -- IBR-Node as main node\\
+            -- Serial link to laptop\\
+            -- Terminal or dashboard\\[1mm]
+            Functions:\\
+            -- receive UDP packets\\
+            -- parse coaster states\\
+            -- show waiter alerts\\
+            -- log evaluation data
+        };
+
+        \node[functionbox, right=1.5cm of gw] (app) {
+            \textbf{Monitoring Output}\\
+            -- Table overview\\
+            -- Drink status\\
+            -- Waiter-call alert\\
+            -- Packet/loss statistics
+        };
+
+        \draw[packet] (c1.east) -- node[above, align=center, font=\scriptsize] {
+            IPv6/UDP/RPL\\
+            \texttt{coaster:id,seq,weight,temp,button,type,status}
+        } (gw.west);
+
+        \draw[packet] (c2.east) -- node[below, align=center, font=\scriptsize] {
+            periodic sensor reports\\
+            event packets on button press
+        } (gw.west);
+
+        \draw[wireless] (c1.south east) -- node[above, sloped, font=\scriptsize] {optional multi-hop} (relay.north east);
+        \draw[wireless] (relay.east) -- node[below, sloped, font=\scriptsize] {RPL forwarding} (gw.south west);
+
+        \draw[packet] (gw.east) -- node[above, font=\scriptsize] {processed states / alerts} (app.west);
+        \draw[downlink] (gw.north west) to[bend right=20] node[above, align=center, font=\scriptsize] {
+            optional ACK / config\\
+            send interval, thresholds
+        } (c1.north east);
+    \end{tikzpicture}
+    }
+    \caption{System architecture for the Smart Coaster WSN proposal.}
+\end{figure}
 
 \projecttitle{Minimum Functional Scope}
 
@@ -274,6 +410,95 @@ If an actuator is included, the gateway can send downlink commands:
 cmd:<node_id>:water:<duration_ms>
 \end{verbatim}
 
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[node distance=1.2cm and 1.8cm]
+        \node[nodebox] (p1) {
+            \textbf{Plant Sensor Node 1}\\
+            Components:\\
+            -- IBR-Node / RIOT OS\\
+            -- Soil moisture sensor\\
+            -- Temperature/humidity sensor\\
+            -- Light sensor\\[1mm]
+            Local functions:\\
+            -- sample plant state\\
+            -- classify dry/normal\\
+            -- event on critical values
+        };
+
+        \node[nodebox, below=of p1] (p2) {
+            \textbf{Plant Sensor Node 2}\\
+            Components:\\
+            -- IBR-Node\\
+            -- Soil moisture sensor\\
+            -- Light sensor\\
+            -- optional LED\\[1mm]
+            Local functions:\\
+            -- periodic reports\\
+            -- adaptive sampling\\
+            -- local warning indicator
+        };
+
+        \node[nodebox, below=of p2] (act) {
+            \textbf{Actuator Node}\\
+            Components:\\
+            -- IBR-Node\\
+            -- Pump / servo valve\\
+            -- LED or buzzer\\[1mm]
+            Functions:\\
+            -- receive command\\
+            -- activate irrigation\\
+            -- send confirmation
+        };
+
+        \node[gatewaybox, right=4.5cm of p2] (gw) {
+            \textbf{Gateway / Greenhouse Controller}\\
+            Components:\\
+            -- IBR-Node as main node\\
+            -- Serial connection to laptop\\[1mm]
+            Functions:\\
+            -- receive plant data\\
+            -- evaluate thresholds\\
+            -- decide irrigation command\\
+            -- store measurements
+        };
+
+        \node[functionbox, right=1.5cm of gw] (dash) {
+            \textbf{Dashboard / Log}\\
+            -- plant zone status\\
+            -- dry-state alerts\\
+            -- irrigation events\\
+            -- reliability metrics
+        };
+
+        \draw[packet] (p1.east) -- node[above, align=center, font=\scriptsize] {
+            IPv6/UDP/RPL\\
+            \texttt{plant:id,seq,soil,temp,hum,light,status}
+        } (gw.west);
+
+        \draw[packet] (p2.east) -- node[below, align=center, font=\scriptsize] {
+            periodic reports\\
+            event on dry state
+        } (gw.west);
+
+        \draw[downlink] (gw.south west) -- node[below, align=center, font=\scriptsize] {
+            downlink command\\
+            \texttt{cmd:id,water,duration}
+        } (act.east);
+
+        \draw[packet] (act.east) -- node[right, align=center, font=\scriptsize] {
+            confirmation\\
+            actuator state
+        } (gw.south);
+
+        \draw[packet] (gw.east) -- node[above, font=\scriptsize] {states, alerts, logs} (dash.west);
+    \end{tikzpicture}
+    }
+    \caption{System architecture for the Smart Greenhouse WSN proposal.}
+\end{figure}
+
 \projecttitle{Minimum Functional Scope}
 
 A minimal working system should include:
@@ -384,6 +609,92 @@ env:3:122:294:38:120:0:hot
 \end{verbatim}
 
 This means that node 3 sent packet 122, measured 29.4 degrees Celsius, 38 percent humidity, low light, no motion, and a hot-state warning.
+
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[node distance=1.2cm and 1.8cm]
+        \node[nodebox] (e1) {
+            \textbf{Room Sensor Node 1}\\
+            Components:\\
+            -- IBR-Node / RIOT OS\\
+            -- Temperature sensor\\
+            -- Humidity sensor\\
+            -- LED indicator\\[1mm]
+            Local functions:\\
+            -- periodic sampling\\
+            -- threshold pre-check\\
+            -- heartbeat messages
+        };
+
+        \node[nodebox, below=of e1] (e2) {
+            \textbf{Room Sensor Node 2}\\
+            Components:\\
+            -- IBR-Node\\
+            -- Light sensor\\
+            -- optional PIR motion sensor\\
+            -- optional door contact\\[1mm]
+            Local functions:\\
+            -- event detection\\
+            -- motion/open alert\\
+            -- adaptive report rate
+        };
+
+        \node[nodebox, below=of e2] (alarm) {
+            \textbf{Optional Alarm/Relay Node}\\
+            Components:\\
+            -- IBR-Node\\
+            -- Buzzer / LED\\[1mm]
+            Functions:\\
+            -- local alarm output\\
+            -- packet forwarding\\
+            -- range extension
+        };
+
+        \node[gatewaybox, right=4.5cm of e2] (gw) {
+            \textbf{Gateway / Monitoring Station}\\
+            Components:\\
+            -- IBR-Node as main node\\
+            -- Laptop terminal/dashboard\\[1mm]
+            Functions:\\
+            -- receive all reports\\
+            -- classify room state\\
+            -- detect missing nodes\\
+            -- log evaluation data
+        };
+
+        \node[functionbox, right=1.5cm of gw] (mon) {
+            \textbf{Monitoring Functions}\\
+            -- normal/warning/alarm\\
+            -- per-node timeout\\
+            -- packet statistics\\
+            -- range comparison
+        };
+
+        \draw[packet] (e1.east) -- node[above, align=center, font=\scriptsize] {
+            IPv6/UDP/RPL\\
+            \texttt{env:id,seq,temp,hum,light,motion,status}
+        } (gw.west);
+
+        \draw[packet] (e2.east) -- node[below, align=center, font=\scriptsize] {
+            sensor reports\\
+            event-based warnings
+        } (gw.west);
+
+        \draw[wireless] (e2.south east) -- node[above, sloped, font=\scriptsize] {optional RPL multi-hop} (alarm.north east);
+        \draw[wireless] (alarm.east) -- node[below, sloped, font=\scriptsize] {forwarding / alarm state} (gw.south west);
+
+        \draw[downlink] (gw.south west) -- node[below, align=center, font=\scriptsize] {
+            optional alarm command\\
+            buzzer/LED activation
+        } (alarm.east);
+
+        \draw[packet] (gw.east) -- node[above, font=\scriptsize] {alerts, state table, logs} (mon.west);
+    \end{tikzpicture}
+    }
+    \caption{System architecture for the Environmental Safety Monitoring proposal.}
+\end{figure}
 
 \projecttitle{Minimum Functional Scope}
 
