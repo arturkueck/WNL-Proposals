@@ -743,6 +743,115 @@ A live demo can simulate different environmental states. For example, one node i
 
 This is the safest and most robust proposal. It is less original than the smart coaster idea but very well aligned with the WSN lab requirements. It also has low hardware risk because temperature, humidity, light, and motion sensors are common and easy to integrate.
 
+\section{Proposal 4: Smart Workspace Monitoring}
+
+\projecttitle{Project Title}
+
+\textbf{Smart Study Environments: Identifying Optimal Learning Spaces}
+
+\projecttitle{Use Case and Motivation}
+During their studies, students spend a significant amount of time in public study spaces on campus for individual learning, group work and exam preparation. However different usages often create conflicting requirements, especially regarding noise levels. This project proposes a wireless sensor network using embedded sensor nodes equipped with microphones and various other sensors to address this issue.
+Moreover, it gathers additional diagnostics to evaluate each room regarding their quality.
+
+The nodes locally process environmental data and transmit aggregated measurements wirelessly to a central sink. A dashboard could visualize room conditions and acoustic heatmaps to help identify suitable and comfortable study environments.
+\projecttitle{Objectives}
+
+The main objectives are:
+
+\begin{itemize}
+    \item implement multiple embedded smart sensing nodes,
+    \item collect noise level, temperature and humidity
+    \item optional gather CO2 level and use PIR to estimate occupancy
+    \item find suitable metric to compute scores
+    \item transmit sensor data wirelessly to the central sink
+    \item provide visualization for gathered data
+    \item evaluate reliability, latency, communication range.
+\end{itemize}
+
+\projecttitle{Selected Wireless Technology}
+
+The project will use IBR-Nodes running RIOT OS. Wireless communication will be implemented using IPv6/UDP over the GNRC network stack. RPL can be used to support multi-hop communication between solely sensing nodes and the sink. This directly builds on the previous multi-node setup with main and client node roles.
+
+\projecttitle{Hardware Components}
+
+Planned hardware components are:
+
+\begin{itemize}
+    \item multiple IBR-Nodes or comparable low-power embedded boards,
+    \item sensitive microphones to determine noise level,
+    \item temperature sensors for room temperature measurement,
+    \item different gas sensors to measure humidity and CO2 level,
+    \item PIR sensors to identify occupancy,
+    \item optional battery packs,
+    \item one gateway node connected to a laptop for monitoring,
+    \item optional relay node for multi-hop evaluation.
+\end{itemize}
+
+\projecttitle{System Architecture}
+
+The system consists of several smart sensing nodes and one central data sink. Each node periodically samples its sensors. To distribute computations each sensor computes a noise score according to chosen metric. Subsequently, it sends compact UDP messages to the data sink. The sink transmits bundled data for visualization.
+
+A possible message format is:
+
+\begin{verbatim}
+ibr-node:<node_id>:<seq>:<temp>:<humidity>:<gas_r>:<noise>:<occ_score>
+\end{verbatim}
+
+Example:
+
+\begin{verbatim}
+ibr-node:2:42:82:?:?:5:1
+\end{verbatim}
+
+This means that node 2 sent packet 42, 8.2 degrees Celsius, measures ? room humidity, measured for air quality ? as gas resistance, evaluated the room to have noise score 5 and estimated its  occupancy score as 5.
+
+\projecttitle{Minimum Functional Scope}
+
+A minimal working system should include:
+
+\begin{itemize}
+    \item at least two smart sensing nodes,
+    \item one data sink,
+    \item noise measurement including computation of score,
+    \item wireless sensor data transmission,
+    \item data sink gathering all measurements,
+    \item basic terminal or dashboard output.
+\end{itemize}
+
+\projecttitle{Possible Extensions}
+
+Possible extensions are:
+
+\begin{itemize}
+    \item measure the rooms quality using temperature, humidity and air quality,
+    \item estimate the availability of learning spaces by using PIR sensors,
+    \item multi-hop forwarding through an additional relay node,
+    \item visually appealing display of data
+\end{itemize}
+
+\projecttitle{Evaluation Plan}
+
+The system can be evaluated using the following metrics:
+
+\begin{itemize}
+    \item \textbf{Packet delivery ratio:} received packets divided by sent packets.
+    \item \textbf{Latency:} time between severe change of environment and received packet at sink.
+    \item \textbf{Range:} communication performance at different distances.
+\end{itemize}
+
+\projecttitle{Live Demonstration}
+
+For demonstration purposes one suitable room has to be identified and needs to be equipped with the developed WSN solution as proof of concept.
+Afterwards, sounds of varying intensity and duration can be emitted from different locations within the room.
+The temperature sensing capabilities can be mocked by using a heater.
+For humidity steaming hot water near the sensor might be enough to see a change of gathered data.
+
+\projecttitle{Assessment}
+
+?
+
+\newpage
+
 \section{Final Recommendation}
 
 The recommended primary proposal is the \textbf{Smart Coaster WSN}. It is the most original idea and provides a strong live demonstration. The \textbf{Smart Greenhouse WSN} is a strong second option because it naturally combines sensors and actuators. The \textbf{Environmental Safety Monitoring Network} is the safest fallback because it is technically robust and closely matches a classical wireless sensor network use case.
